@@ -31,14 +31,16 @@ CircularBuffer<byte, 256> Rx_8255;
 volatile bool Wrote1stByte;
 #endif
 
+bool In8255Avail()
+{
+  return digitalRead(OBF_int) == LOW;
+}
+
 void WriteData(byte value)
 {
   // Setup bus as output
-  //DDRD = DDRD | 0xF0;   // set bits 7-4
-  DDRD = 0xF2;
-  
-  //DDRC = DDRC | 0x0F;   // set bits 3-0
-  DDRC = 0x3F;
+  DDRD |= 0xF0;   // set bits 7-4
+  DDRC |= 0x0F;   // set bits 3-0
 
   PORTC = (PORTC & 0x30) | (value & 0x0F);
   PORTD = (PORTD & 0x02) | (value & 0xF0);
@@ -48,11 +50,8 @@ void WriteData(byte value)
   digitalWrite(STB_out, HIGH);
 
   // Setup bus as input
-  //DDRD = DDRD & 0x0F;   // clear bits 7-4
-  DDRD = 0x02;
-  
-  //DDRC = DDRD & 0xF0;   // clear bits 3-0
-  DDRC = 0x30;
+  DDRD &= 0x0F;   // clear bits 7-4
+  DDRC &= 0xF0;   // clear bits 3-0
 }
 
 byte ReadData()
@@ -64,12 +63,9 @@ byte ReadData()
   digitalWrite(ACK_out, LOW);
   
   // Setup bus as input
-  //DDRD = DDRD & 0x0F;   // clear bits 7-4
-  DDRD = 0x02;
-  
-  //DDRC = DDRD & 0xF0;   // clear bits 3-0
-  DDRC = 0x30;
-  
+  DDRD &= 0x0F;   // clear bits 7-4
+  DDRC &= 0xF0;   // clear bits 3-0
+
   value = (PINC & 0x0F) | (PIND & 0xF0);
   
   digitalWrite(ACK_out, HIGH);
@@ -114,11 +110,8 @@ byte value;
 
 void intf_8255_init() {  
   // Setup bus as input
-  //DDRD = DDRD & 0x0F;   // clear bits 7-4
-  DDRD = 0x02;
-  
-  //DDRC = DDRD & 0xF0;   // clear bits 3-0
-  DDRC = 0x30;
+  DDRD &= 0x0F;   // clear bits 7-4
+  DDRC &= 0xF0;   // clear bits 3-0
 
   pinMode(OBF_int, INPUT_PULLUP);
   pinMode(IBF_int, INPUT_PULLUP);
